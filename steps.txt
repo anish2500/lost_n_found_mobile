@@ -1,0 +1,68 @@
+Mobile complete backend process 
+Step 1: app folder bhitra constants folder khojney jasma hive_table_constant.dart ma database ko name declare garney along with 
+every entity you have and their id as well ani 
+pubsec yaml ma dartz xa ki xaina search garney 
+
+Step 2: create failure class error bhanney folder ma failure.dart banauney junma failure message haru halnu paryo in case operation matlab database failure bhayo bhaney esma equitable package ko use hunxa jun import garnu parxa 
+local ko ho ki remote ko error ho bhanera track garna failure.dart banauney ho 
+
+step 3: batch ko domain ko entities ma gayer euta file banauney jasko naam batch_entity.dart
+
+step 4 : batch ko data ko model ma gayera batch_hive_model.dart file banauney dart run build_runner build -d yo terminal execute garera euta model afai generate hunu parxa 
+
+step 5 : tes paxi core bhitra ko services ma hive_service.dart bhanney file banauney jasma sab queries haru hunxa jastai get update delete and all 
+
+eti garesi duita data sources lai ta control garnu paryo so teslai control garna interface chahiyo 
+step 6 : data features ko data ko datasources bhitra gayera batch_datasource.dart banauney 
+eti garesi hami local data source ma pugxau  
+
+Step 7 : tehi datasource ko local bhitra batch_local_datasource.dart banauney jaha batchData source lai import garera extends garera implement gardiney 5 ota missing overrides 
+
+step 8 : datasource paxi tesko tala repositories ma janey ani batch_repository.dart banauney 
+
+domain layer ma use case chai communication garna chahinxa 
+step 9 : core ma gayera usecases bhanney euta folder banauney ani tesma app_usecase.dart banauney 
+
+step 10 : features ko batch ko domain ko usecases ma gayera create_batch_usecase.dart bhanney file banauney ani same folder mai delete_batch_usecase.dart ni banauney 
+ani esari nai get all ra upgrade ko ni banaueny same folder mai ani get_batch_byid_usecase ni banauney tesmai 
+
+tes paxi first ma create ma code implement garney extends garera ani get all ma janey 
+
+step 11: lib ko features ko batch ko presentation folder ma state bhanney folder banauney tya batch_state.dart banauney 
+
+step 12 : view model banauney tehi state folder bhako folder mai banuney view_model folder ani tesma batch_viewmodel.dart 
+
+now ui part ma janu aghi provider part ma janu paryo 
+hamle dependency injection garnu xa 
+
+step 13 : core bhitrako services bhitra ko hives ma janey class ko singleton object banauney inside hive_service.dart 
+step 14 : batch ko data ko datasources ma janey ani tesma ni local bhitra ko batch_local_datasource.dart ma pheri janey after step 13 
+
+step 15 : tespaxi same main folder ko repository ko batch_repository ma janey 
+step 16: usecases ma banako create_batch_usecase ma janey which is inside features ko batch ko domain bhitra 
+step 17 : usecases kai get_all_batch_usecase ma janey after above step 
+step 18 : usecases kai update wala usecase file bhitra janey 
+
+
+step 19 : aba features ko batch ko presentation ko view_model ko batch_viewmodel.dart ma janey 
+aba ui ma jada data lai load garnu paryo so 
+step 20 : aba features ko auth ko presentation layer ko pages ko ma janey ani signup page ma janey tesko ni 
+
+step 21: ahile lai data chai dummy banayera store garney core ko services ko hive_service.dart ma janey 
+
+step 22: hive service lai main.dart ma gayer init garney 
+
+
+
+
+
+
+
+
+
+
+
+
+hamro main aim bhaneko drop down field ma database bata data haru retrive garney ho locally 
+Step 4: batch ko domain layer ma janey ani repo ma euta file banayera interface class banauney 
+
