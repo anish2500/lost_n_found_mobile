@@ -6,6 +6,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import 'signup_page.dart';
+import '../../../../features/auth/presentation/view_model/auth_view_model.dart';
+import '../../../../features/auth/presentation/state/auth_state.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -19,7 +21,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,22 +29,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+  // Helper Methods
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // TODO: Implement login logic
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        // Navigate to dashboard
-        AppRoutes.pushReplacement(context, const DashboardPage());
-      }
+      ref
+          .read(authViewModelProvider.notifier)
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
     }
   }
 
@@ -52,25 +46,45 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _handleForgotPassword() {
-    // TODO: Implement forgot password
     SnackbarUtils.showInfo(context, 'Forgot password feature coming soon');
   }
 
   void _handleGoogleSignIn() {
-    // TODO: Implement Google Sign In
     SnackbarUtils.showInfo(context, 'Google Sign In coming soon');
   }
 
   void _handleAppleSignIn() {
-    // TODO: Implement Apple Sign In
     SnackbarUtils.showInfo(context, 'Apple Sign In coming soon');
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the state for the loading indicator
+    final authState = ref.watch(authViewModelProvider);
+    final isLoading = authState.status == AuthStatus.loading;
+
+    // Theme helpers
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.textDark;
-    final secondaryTextColor = Theme.of(context).textTheme.bodySmall?.color ?? AppColors.textMuted;
+    final textColor =
+        Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.textDark;
+    final secondaryTextColor =
+        Theme.of(context).textTheme.bodySmall?.color ?? AppColors.textMuted;
+
+    // Listen to auth state changes for navigation/snackbars
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated) {
+        SnackbarUtils.showSuccess(context, 'Login successful!');
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            AppRoutes.pushReplacement(context, const DashboardPage());
+          } else {
+            AppRoutes.pushReplacement(context, const LoginPage());
+          }
+        });
+      } else if (next.status == AuthStatus.error) {
+        SnackbarUtils.showError(context, next.errorMessage ?? 'Login failed');
+      }
+    });
 
     return Scaffold(
       body: SafeArea(
@@ -82,7 +96,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-
                 // Softwarica Logo
                 Center(
                   child: SvgPicture.asset(
@@ -90,13 +103,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     width: 200,
                     height: 70,
                     colorFilter: ColorFilter.mode(
-                      isDarkMode ? AppColors.darkTextPrimary : AppColors.primary,
+                      isDarkMode
+                          ? AppColors.darkTextPrimary
+                          : AppColors.primary,
                       BlendMode.srcIn,
                     ),
                   ),
                 ),
                 const SizedBox(height: 32),
-
                 // Title
                 Text(
                   'Welcome Back!',
@@ -109,13 +123,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 8),
                 Text(
                   'Sign in to continue',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: secondaryTextColor,
-                  ),
+                  style: TextStyle(fontSize: 16, color: secondaryTextColor),
                 ),
                 const SizedBox(height: 40),
-
                 // Email Field
                 TextFormField(
                   controller: _emailController,
@@ -127,17 +137,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
+                    if (!value.contains('@'))
                       return 'Please enter a valid email';
-                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -146,38 +153,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
-                    prefixIcon: Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
+                    if (value.length < 6)
                       return 'Password must be at least 6 characters';
-                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 8),
-
                 // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: _handleForgotPassword,
-                    child: Text(
+                    child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
                         color: AppColors.authPrimary,
@@ -187,21 +188,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 // Login Button
                 SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
+                    onPressed: isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.authPrimary,
                       foregroundColor: Colors.white,
-                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _isLoading
+                    child: isLoading
                         ? const SizedBox(
                             width: 24,
                             height: 24,
@@ -212,7 +211,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           )
-                        : Text(
+                        : const Text(
                             'Login',
                             style: TextStyle(
                               fontSize: 18,
@@ -222,11 +221,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 // Divider
                 Row(
                   children: [
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -237,11 +235,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                     ),
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 24),
-
                 // Social Login Buttons
                 Row(
                   children: [
@@ -252,20 +249,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           'assets/icons/google_logo.svg',
                           width: 20,
                           height: 20,
-                          colorFilter: isDarkMode
-                              ? const ColorFilter.mode(
-                                  AppColors.darkTextPrimary,
-                                  BlendMode.srcIn,
-                                )
-                              : null,
                         ),
-                        label: Text('Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        label: const Text('Google'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -276,26 +261,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           'assets/icons/apple_logo.svg',
                           width: 20,
                           height: 20,
-                          colorFilter: isDarkMode
-                              ? const ColorFilter.mode(
-                                  AppColors.darkTextPrimary,
-                                  BlendMode.srcIn,
-                                )
-                              : null,
                         ),
-                        label: Text('Apple'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        label: const Text('Apple'),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-
                 // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -306,7 +278,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     TextButton(
                       onPressed: _navigateToSignup,
-                      child: Text(
+                      child: const Text(
                         'Sign Up',
                         style: TextStyle(
                           color: AppColors.primary,

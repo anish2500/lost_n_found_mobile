@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../../../item/presentation/pages/my_items_page.dart';
 import '../../../item/presentation/pages/report_item_page.dart';
 
-class DashboardPage extends StatefulWidget {
+
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _DashboardPageContent(ref: ref);
+  }
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageContent extends ConsumerStatefulWidget {
+  const _DashboardPageContent({required this.ref, super.key});
+
+  final WidgetRef ref;
+
+  @override
+  ConsumerState<_DashboardPageContent> createState() => _DashboardPageContentState();
+}
+
+class _DashboardPageContentState extends ConsumerState<_DashboardPageContent> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [

@@ -28,7 +28,7 @@ class BatchHiveModel extends HiveObject {
   BatchEntity toEntity() {
     return BatchEntity(
       batchId: batchId,
-      batchName: "Chitwan $batchName",
+      batchName: batchName,
       status: status,
     );
   }

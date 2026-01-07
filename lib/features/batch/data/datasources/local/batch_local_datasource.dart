@@ -5,15 +5,20 @@ import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
 
 // step 13 paxi ya auney
 final batchLocalDataSourceProvider = Provider<BatchLocalDatasource>((ref) {
-  return BatchLocalDatasource(hiveService: ref.read(hiveServiceProvider));
+  final hiveService = ref.read(hiveServiceProvider);
+
+  return BatchLocalDatasource(
+    hiveService: hiveService,
+  );
 });
 
-class BatchLocalDatasource implements IBatchDataSource {
+class BatchLocalDatasource implements IBatchLocalDataSource {
   //dependency injection
   final HiveService _hiveService;
 
-  BatchLocalDatasource({required HiveService hiveService})
-    : _hiveService = hiveService;
+  BatchLocalDatasource({
+    required HiveService hiveService,
+  }) : _hiveService = hiveService;
   @override
   Future<bool> createBatch(BatchHiveModel entity) async {
     try {

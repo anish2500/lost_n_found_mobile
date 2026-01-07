@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../auth/presentation/pages/login_page.dart';
+import '../../../auth/presentation/pages/signup_page.dart';
+import '../../../auth/presentation/view_model/auth_view_model.dart';
+import '../../../auth/presentation/state/auth_state.dart';
+import '../../../../core/services/storage/user_session_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen to auth state changes for logout
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.unauthenticated) {
+        // User logged out, navigate to signup/login screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+          (route) => false,
+        );
+      }
+    });
+
     return Scaffold(
       // backgroundColor: context.backgroundColor // Using theme default,
       body: SafeArea(
@@ -178,7 +195,7 @@ class ProfileScreen extends StatelessWidget {
                       iconColor: AppColors.error,
                       titleColor: AppColors.error,
                       onTap: () {
-                        _showLogoutDialog(context);
+                        _showLogoutDialog(context, ref);
                       },
                     ),
                   ],
@@ -203,7 +220,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -226,9 +243,10 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              AppRoutes.pushAndRemoveUntil(context, const LoginPage());
+              // Call auth view model logout method to clear session
+              await ref.read(authViewModelProvider.notifier).logout();
             },
             child: Text(
               'Logout',

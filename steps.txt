@@ -66,3 +66,15 @@ step 22: hive service lai main.dart ma gayer init garney
 hamro main aim bhaneko drop down field ma database bata data haru retrive garney ho locally 
 Step 4: batch ko domain layer ma janey ani repo ma euta file banayera interface class banauney 
 
+
+
+
+
+//api part 1 tutorial 
+
+client ra end points ko file already xa teslai copy garera rakhney in the api folder inside the core 
+step 1 : go to the connectivity folder inside the services which is inside core and build file named network_info.dart 
+step 2 : espaxi lib ko features ko batch ko data ko models bhitra batch_api_model.dart file banauney 
+step 3 : tes paxi tehi same datasources folder mai remote folder bhitra batch_remote_datasource.dart banauney 
+step 4 : same root folder ko repositories bhitra janey to determine left janey ki right janey bhanera 
+

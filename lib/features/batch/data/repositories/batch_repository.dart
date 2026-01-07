@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/core/error/failures.dart';
+import 'package:lost_n_found/core/services/connectivity/network_info.dart';
 import 'package:lost_n_found/features/batch/data/datasources/batch_datasource.dart';
 import 'package:lost_n_found/features/batch/data/datasources/local/batch_local_datasource.dart';
+import 'package:lost_n_found/features/batch/data/datasources/remote/batch_remote_datasource.dart';
 import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
 import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 import 'package:lost_n_found/features/batch/domain/repositories/batch_repository.dart';
@@ -10,22 +12,35 @@ import 'package:lost_n_found/features/batch/domain/repositories/batch_repository
 //step 14 paxi ya auney
 //internet on
 final batchRepositoryProvider = Provider<IBatchRepository>((ref) {
-  return BatchRepository(datasource: ref.read(batchLocalDataSourceProvider));
+  final batchLocalDatasource = ref.read(batchLocalDataSourceProvider);
+  final batchRemoteDataSource = ref.read(batchRemoteProvider);
+  final networkInfo = ref.read(networkInfoProvider);
+  return BatchRepository(datasource : batchLocalDatasource, batchRemoteDataSource: batchRemoteDataSource, 
+  networkInfo: networkInfo
+  );
 });
 
 class BatchRepository implements IBatchRepository {
   //yo class local datasource mathi dependent xa
   //Ibatch data source use garnu ko karan paxi internet hudako lagi
-  final IBatchDataSource _datasource;
+  final IBatchLocalDataSource _batchLocalDataSource;
+  //remote
+  final IBatchRemoteDataSource _batchRemoteDataSource;
+  final NetworkInfo _networkInfo;
 
-  BatchRepository({required IBatchDataSource datasource})
-    : _datasource = datasource;
+  BatchRepository({
+    required IBatchLocalDataSource datasource,
+    required IBatchRemoteDataSource batchRemoteDataSource,
+    required NetworkInfo networkInfo,
+  }) : _batchLocalDataSource = datasource,
+       _batchRemoteDataSource = batchRemoteDataSource,
+       _networkInfo = networkInfo;
   @override
   Future<Either<Failure, bool>> createBatch(BatchEntity entity) async {
     try {
       //entity lai model ma conversion garnu paryo
       final model = BatchHiveModel.fromEntity(entity);
-      final result = await _datasource.createBatch(model);
+      final result = await _batchLocalDataSource.createBatch(model);
       if (result) {
         return Right(true);
       }
@@ -44,7 +59,7 @@ class BatchRepository implements IBatchRepository {
   @override
   Future<Either<Failure, List<BatchEntity>>> getAllBatches() async {
     try {
-      final models = await _datasource.getAllBatches();
+      final models = await _batchLocalDataSource.getAllBatches();
       final entities = BatchHiveModel.toEntityList(models); //conversion
       return Right(entities);
     } catch (e) {

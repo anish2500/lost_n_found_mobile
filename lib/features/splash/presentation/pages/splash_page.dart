@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lost_n_found/features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../onboarding/presentation/pages/onboarding_page.dart';
+import '../../../../core/services/storage/user_session_service.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -84,7 +86,19 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
-    AppRoutes.pushReplacement(context, const OnboardingPage());
+    
+    // Check if user is logged in and navigate accordingly
+    final userSessionService = ref.read(userSessionServiceProvider);
+    if (userSessionService.isLoggedIn()) {
+      // User is logged in, go to dashboard
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardPage()),
+      );
+    } else {
+      // User is not logged in, go to onboarding
+      AppRoutes.pushReplacement(context, const OnboardingPage());
+    }
   }
 
   @override

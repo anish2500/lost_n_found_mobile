@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 import 'package:lost_n_found/features/batch/presentation/state/batch_state.dart';
 import 'package:lost_n_found/features/batch/presentation/view_model/batch_viewmodel.dart';
+import 'package:lost_n_found/features/auth/presentation/view_model/auth_view_model.dart';
+import 'package:lost_n_found/features/auth/presentation/state/auth_state.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
@@ -65,18 +67,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     }
 
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        AppRoutes.pushReplacement(context, const DashboardPage());
-      }
+      // Call auth view model register method with all required fields
+      ref.read(authViewModelProvider.notifier).register(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        countryCode: _selectedCountryCode,
+        batchId: _selectedBatch ?? '',
+        password: _passwordController.text.trim(),
+      );
     }
   }
 
@@ -97,10 +96,25 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Widget build(BuildContext context) {
     // step 20 mai
     final batchState = ref.watch(batchViewModelProvider);
+    final authState = ref.watch(authViewModelProvider);
 
     if (batchState.status == BatchStatus.loaded) {
       _batches = batchState.batches; 
     }
+
+    // Listen to auth state changes
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.registered) {
+        SnackbarUtils.showSuccess(context, 'Registration successful! Please login to continue.');
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(context).pop(); // Go back to login page
+          }
+        });
+      } else if (next.status == AuthStatus.error) {
+        SnackbarUtils.showError(context, next.errorMessage ?? 'Registration failed');
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -443,9 +457,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                   // Sign Up Button
                   GradientButton(
-                    text: 'Create Account',
-                    onPressed: _handleSignup,
-                    isLoading: _isLoading,
+                    text: authState.status == AuthStatus.loading ? 'Creating Account...' : 'Create Account',
+                    onPressed: authState.status == AuthStatus.loading ? () {} : _handleSignup,
+                    isLoading: authState.status == AuthStatus.loading,
                   ),
                   const SizedBox(height: 32),
 

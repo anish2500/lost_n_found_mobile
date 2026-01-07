@@ -345,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Quick Stats
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Row(
                   children: [
                     Expanded(
