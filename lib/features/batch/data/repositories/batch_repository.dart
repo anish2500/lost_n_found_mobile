@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lost_n_found/core/error/failures.dart';
 import 'package:lost_n_found/core/services/connectivity/network_info.dart';
 import 'package:lost_n_found/features/batch/data/datasources/batch_datasource.dart';
 import 'package:lost_n_found/features/batch/data/datasources/local/batch_local_datasource.dart';
 import 'package:lost_n_found/features/batch/data/datasources/remote/batch_remote_datasource.dart';
+import 'package:lost_n_found/features/batch/data/models/batch_api_model.dart';
 import 'package:lost_n_found/features/batch/data/models/batch_hive_model.dart';
 import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 import 'package:lost_n_found/features/batch/domain/repositories/batch_repository.dart';
@@ -15,8 +17,10 @@ final batchRepositoryProvider = Provider<IBatchRepository>((ref) {
   final batchLocalDatasource = ref.read(batchLocalDataSourceProvider);
   final batchRemoteDataSource = ref.read(batchRemoteProvider);
   final networkInfo = ref.read(networkInfoProvider);
-  return BatchRepository(datasource : batchLocalDatasource, batchRemoteDataSource: batchRemoteDataSource, 
-  networkInfo: networkInfo
+  return BatchRepository(
+    datasource: batchLocalDatasource,
+    batchRemoteDataSource: batchRemoteDataSource,
+    networkInfo: networkInfo,
   );
 });
 
@@ -58,12 +62,31 @@ class BatchRepository implements IBatchRepository {
 
   @override
   Future<Either<Failure, List<BatchEntity>>> getAllBatches() async {
-    try {
-      final models = await _batchLocalDataSource.getAllBatches();
-      final entities = BatchHiveModel.toEntityList(models); //conversion
-      return Right(entities);
-    } catch (e) {
-      return Left(LocalDatabaseFailure(message: e.toString()));
+    //internet xa ki xaina
+    if (await _networkInfo.isConnected) {
+      try {
+        //api model capture
+        final apiModels = await _batchRemoteDataSource.getAllBatches();
+        //convert to entity
+        final result = BatchApiModel.toEntityList(apiModels);
+
+        return Right(result);
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            statusCode: e.response?.statusCode,
+            message: e.response?.data['message'] ?? 'Failed to create batches',
+          ),
+        );
+      }
+    } else {
+      try {
+        final models = await _batchLocalDataSource.getAllBatches();
+        final entities = BatchHiveModel.toEntityList(models); //conversion
+        return Right(entities);
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
+      }
     }
   }
 

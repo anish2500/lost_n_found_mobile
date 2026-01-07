@@ -25,8 +25,8 @@ class NetworkInfo implements INetworkInfo {
     if (result.contains(ConnectivityResult.none)) {
       return false;
     }
-    return await _isInternetReallyAvailable();//decides to return true or false 
-    // return true;
+    // return await _isInternetReallyAvailable();//decides to return true or false 
+    return true;
   }
 
   //internet xa ki nai check garney
@@ -35,7 +35,7 @@ class NetworkInfo implements INetworkInfo {
     try {
       final result = await InternetAddress.lookup('google.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (e) {
+    } on SocketException catch (_) {
       return false;
     }
   }
