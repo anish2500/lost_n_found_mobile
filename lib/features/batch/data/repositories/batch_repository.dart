@@ -62,32 +62,58 @@ class BatchRepository implements IBatchRepository {
 
   @override
   Future<Either<Failure, List<BatchEntity>>> getAllBatches() async {
-    // Skip backend for now - use only local data
-    // if (await _networkInfo.isConnected) {
-    //   try {
-    //     //api model capture
-    //     final apiModels = await _batchRemoteDataSource.getAllBatches();
-    //     //convert to entity
-    //     final result = BatchApiModel.toEntityList(apiModels);
+    // Try to fetch from remote first if connected
+    if (await _networkInfo.isConnected) {
+      try {
+        //api model capture
+        final apiModels = await _batchRemoteDataSource.getAllBatches();
+        //convert to entity
+        final result = BatchApiModel.toEntityList(apiModels);
 
-    //     return Right(result);
-    //   } on DioException catch (e) {
-    //     return Left(
-    //       ApiFailure(
-    //         statusCode: e.response?.statusCode,
-    //         message: e.response?.data['message'] ?? 'Failed to create batches',
-    //       ),
-    //     );
-    //   }
-    // } else {
+        return Right(result);
+      } on DioException catch (e) {
+        // Network error - try to fallback to local cache
+        try {
+          final models = await _batchLocalDataSource.getAllBatches();
+          final entities = BatchHiveModel.toEntityList(models);
+
+          // Return cached data with a warning
+          return Right(entities);
+        } catch (_) {
+          // No cached data available, return the network error
+          return Left(
+            ApiFailure(
+              statusCode: e.response?.statusCode,
+              message:
+                  e.response?.data['message'] ??
+                  'Failed to load batches. Check your connection.',
+            ),
+          );
+        }
+      } catch (e) {
+        // Other errors - try to fallback to local cache
+        try {
+          final models = await _batchLocalDataSource.getAllBatches();
+          final entities = BatchHiveModel.toEntityList(models);
+          return Right(entities);
+        } catch (_) {
+          return Left(LocalDatabaseFailure(message: e.toString()));
+        }
+      }
+    } else {
+      // No internet connection - use local cache
       try {
         final models = await _batchLocalDataSource.getAllBatches();
         final entities = BatchHiveModel.toEntityList(models); //conversion
         return Right(entities);
       } catch (e) {
-        return Left(LocalDatabaseFailure(message: e.toString()));
+        return Left(
+          LocalDatabaseFailure(
+            message: 'No internet and no cached data available',
+          ),
+        );
       }
-    // }
+    }
   }
 
   @override

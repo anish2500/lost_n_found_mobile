@@ -38,7 +38,7 @@ class UserSessionService {
     await _prefs.setBool(_keyIsLoggedIn, true);
     await _prefs.setString(_keyUserId, userId);
     await _prefs.setString(_keyUserEmail, email);
-    await _prefs.setString(_keyUsername, username);
+    // await _prefs.setString(_keyUsername, username);
     await _prefs.setString(_keyUserFullName, fullName);
     if (phoneNumber != null) {
       await _prefs.setString(_keyUserPhoneNumber, phoneNumber);

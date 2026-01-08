@@ -14,7 +14,7 @@ final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
   );
 });
 
-class AuthLocalDatasource implements IAuthDataSource {
+class AuthLocalDatasource implements IAuthLocalDataSource {
   final HiveService _hiveService;
   final UserSessionService _userSessionService;
 
@@ -25,10 +25,10 @@ class AuthLocalDatasource implements IAuthDataSource {
        _userSessionService = userSessionService;
 
   @override
-  Future<bool> register(AuthHiveModel model) async {
+  Future<AuthHiveModel> register(AuthHiveModel user) async {
     try {
-      await _hiveService.registerUser(model);
-      return true;
+      await _hiveService.registerUser(user);
+      return user; // Return the user object as required by the new interface
     } catch (e) {
       throw Exception('Registration failed: ${e.toString()}');
     }
@@ -39,11 +39,10 @@ class AuthLocalDatasource implements IAuthDataSource {
     try {
       final user = await _hiveService.loginUser(email, password);
       if (user != null) {
-        // Save user session
         await _userSessionService.saveUserSession(
           userId: user.authId!,
           email: user.email,
-          username: user.email.split('@')[0], // Use email prefix as username
+          username: user.username,
           fullName: user.fullName,
           phoneNumber: user.phoneNumber,
           batchId: user.batchId,
@@ -52,7 +51,7 @@ class AuthLocalDatasource implements IAuthDataSource {
       }
       return user;
     } catch (e) {
-      throw Exception('Login failed: ${e.toString()}');
+      return null;
     }
   }
 
@@ -61,7 +60,7 @@ class AuthLocalDatasource implements IAuthDataSource {
     try {
       final userId = _userSessionService.getUserId();
       if (userId != null) {
-        return _hiveService.getCurrentUser(userId);
+        return await _hiveService.getCurrentUser(userId);
       }
       return null;
     } catch (e) {
@@ -82,9 +81,47 @@ class AuthLocalDatasource implements IAuthDataSource {
   @override
   Future<bool> isEmailExists(String email) async {
     try {
-      return _hiveService.isEmailExists(email);
+      return await _hiveService.isEmailExists(email);
     } catch (e) {
       throw Exception('Failed to check email: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<AuthHiveModel?> getUserById(String authId) async {
+    try {
+      return await _hiveService.getUserById(authId);
+    } catch (e) {
+      throw Exception('Failed to get user by ID: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<AuthHiveModel?> getUserByEmail(String email) async {
+    try {
+      return await _hiveService.getUserByEmail(email);
+    } catch (e) {
+      throw Exception('Failed to get user by email: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<bool> updateUser(AuthHiveModel user) async {
+    try {
+      await _hiveService.updateUser(user);
+      return true;
+    } catch (e) {
+      throw Exception('Failed to update user: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<bool> deleteUser(String authId) async {
+    try {
+      await _hiveService.deleteUser(authId);
+      return true;
+    } catch (e) {
+      throw Exception('Failed to delete user: ${e.toString()}');
     }
   }
 }

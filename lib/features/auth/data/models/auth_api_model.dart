@@ -48,8 +48,8 @@ class AuthApiModel {
       password: json['password'] as String?,
       batchId: json['batchId'] as String?,
       profilePicture: json['profilePicture'] as String?,
-      batch: json['batch'] != null 
-          ? BatchApiModel.fromJson(json['batch'] as Map<String, dynamic>) 
+      batch: json['batch'] != null
+          ? BatchApiModel.fromJson(json['batch'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -72,7 +72,7 @@ class AuthApiModel {
   // fromEntity: Converts Domain Layer Entity to Model
   factory AuthApiModel.fromEntity(AuthEntity entity) {
     return AuthApiModel(
-      id: entity.authId,
+      // id: entity.authId,
       fullName: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
@@ -80,9 +80,14 @@ class AuthApiModel {
       batchId: entity.batchId,
       password: entity.password,
       profilePicture: entity.profilePicture,
-      batch: entity.batch != null 
-          ? BatchApiModel.fromEntity(entity.batch!) 
+      batch: entity.batch != null
+          ? BatchApiModel.fromEntity(entity.batch!)
           : null,
     );
+  }
+
+  //to Entity list
+  static List<AuthEntity> toEntityList(List<AuthApiModel> models) {
+    return models.map((model) => model.toEntity()).toList();
   }
 }

@@ -26,12 +26,14 @@ class BatchRemoteDatasource implements IBatchRemoteDataSource {
 
   @override
   Future<List<BatchApiModel>> getAllBatches() async {
-    final response = await _apiClient.get(ApiEndpoints.batches);
-    final data = response.data['data'] as List; //list ma
-    //conversion
-    //json - api - entity : from Json
-    // entity -model - json  : to Json
-    return data.map((json) => BatchApiModel.fromJson(json)).toList();
+    try {
+      final response = await _apiClient.get(ApiEndpoints.batches);
+      final data = response.data['data'] as List;
+      return data.map((json) => BatchApiModel.fromJson(json)).toList();
+    } catch (e) {
+      // Re-throw to let repository handle fallback
+      throw Exception('API call failed: $e');
+    }
   }
 
   @override

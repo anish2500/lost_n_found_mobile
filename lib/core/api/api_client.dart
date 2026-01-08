@@ -30,18 +30,16 @@ class ApiClient {
     // Add interceptors
     _dio.interceptors.add(_AuthInterceptor());
 
-    // Auto retry on network failures
+    // Auto retry on network failures (reduced for faster fallback)
     _dio.interceptors.add(
       RetryInterceptor(
         dio: _dio,
-        retries: 3,
+        retries: 1, // Reduced from 3 to 1 for faster fallback
         retryDelays: const [
-          Duration(seconds: 1),
-          Duration(seconds: 2),
-          Duration(seconds: 3),
+          Duration(seconds: 1), // Single quick retry
         ],
         retryEvaluator: (error, attempt) {
-          // Retry on connection errors and timeouts, not on 4xx/5xx
+          // Only retry on connection errors, not on server errors
           return error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
