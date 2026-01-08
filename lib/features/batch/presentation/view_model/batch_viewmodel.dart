@@ -24,17 +24,20 @@ class BatchViewModel extends Notifier<BatchState> {
   }
 
   Future<void> getAllBatches() async {
+    print('DEBUG: getAllBatches() called');
     state = state.copyWith(status: BatchStatus.loading);
     final result = await _getAllBatchUsecase();
 
     result.fold(
       (left) {
+        print('DEBUG: getAllBatches() failed: ${left.message}');
         state = state.copyWith(
           status: BatchStatus.error,
           errorMessage: left.message,
         );
       },
       (batches) {
+        print('DEBUG: getAllBatches() success: ${batches.length} batches');
         state = state.copyWith(status: BatchStatus.loaded, batches: batches);
       },
     );

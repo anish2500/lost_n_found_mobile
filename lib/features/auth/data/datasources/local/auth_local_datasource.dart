@@ -45,7 +45,7 @@ class AuthLocalDatasource implements IAuthDataSource {
           email: user.email,
           username: user.email.split('@')[0], // Use email prefix as username
           fullName: user.fullName,
-          phoneNumber: user.phone,
+          phoneNumber: user.phoneNumber,
           batchId: user.batchId,
           profileImage: user.profilePicture ?? '',
         );

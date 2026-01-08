@@ -5,7 +5,7 @@ import 'package:lost_n_found/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:lost_n_found/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:lost_n_found/features/auth/presentation/state/auth_state.dart';
 
-//Provider
+// Provider
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   () => AuthViewModel(),
 );
@@ -25,12 +25,13 @@ class AuthViewModel extends Notifier<AuthState> {
     return AuthState();
   }
 
+  // Updated Register Method
   Future<void> register({
     required String fullName,
     required String email,
-    required String phone,
-    required String countryCode,
-    required String batchId,
+    required String username,
+    String? phoneNumber,
+    String? batchId,
     required String password,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
@@ -38,11 +39,12 @@ class AuthViewModel extends Notifier<AuthState> {
     final params = RegisterUsecaseParams(
       fullName: fullName,
       email: email,
-      phone: phone,
-      countryCode: countryCode,
+      username: username,
+      phoneNumber: phoneNumber,
       batchId: batchId,
       password: password,
     );
+
     final result = await _registerUsecase(params);
     result.fold(
       (failure) {
@@ -57,7 +59,7 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  //Login
+  // Login
   Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading);
     final params = LoginUsecaseParams(email: email, password: password);
@@ -79,7 +81,7 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  //Logout
+  // Logout
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
     final result = await _logoutUsecase();
@@ -100,7 +102,7 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  //Get Current User
+  // Get Current User
   Future<void> getCurrentUser() async {
     state = state.copyWith(status: AuthStatus.loading);
     final result = await _getCurrentUserUsecase();
@@ -121,7 +123,7 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  //Reset state
+  // Reset state
   void resetState() {
     state = AuthState();
   }

@@ -10,24 +10,32 @@ import 'package:lost_n_found/features/auth/domain/repositories/auth_repository.d
 class RegisterUsecaseParams extends Equatable {
   final String fullName;
   final String email;
-  final String phone;
-  final String countryCode;
-  final String batchId;
+  final String username;      // Added field
+  final String? phoneNumber;  // Consolidated field
+  final String? batchId;     // Made nullable to match Entity
   final String password;
 
   const RegisterUsecaseParams({
     required this.fullName,
     required this.email,
-    required this.phone,
-    required this.countryCode,
-    required this.batchId,
+    required this.username,
+    this.phoneNumber,
+    this.batchId,
     required this.password,
   });
+
   @override
-  List<Object?> get props => [fullName, email, phone, countryCode, batchId, password];
+  List<Object?> get props => [
+        fullName,
+        email,
+        username,
+        phoneNumber,
+        batchId,
+        password,
+      ];
 }
 
-//provider
+// Provider
 final registerUsecaseProvider = Provider<RegisterUsecase>((ref) {
   final authRepository = ref.read(authRepositoryProvider);
   return RegisterUsecase(authRepository: authRepository);
@@ -38,18 +46,20 @@ class RegisterUsecase
   final IAuthRepository _authRepository;
 
   RegisterUsecase({required IAuthRepository authRepository})
-    : _authRepository = authRepository;
+      : _authRepository = authRepository;
 
   @override
   Future<Either<Failure, bool>> call(RegisterUsecaseParams params) {
+    // Creating the Entity with updated field names
     final entity = AuthEntity(
       fullName: params.fullName,
       email: params.email,
-      phone: params.phone,
-      countryCode: params.countryCode,
+      username: params.username,
+      phoneNumber: params.phoneNumber ?? '',
       batchId: params.batchId,
       password: params.password,
     );
+    
     return _authRepository.register(entity);
   }
 }

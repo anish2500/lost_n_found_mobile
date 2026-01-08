@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
+import 'package:lost_n_found/features/auth/presentation/state/auth_state.dart';
+import 'package:lost_n_found/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:lost_n_found/features/batch/presentation/state/batch_state.dart';
 import 'package:lost_n_found/features/batch/presentation/view_model/batch_viewmodel.dart';
-import 'package:lost_n_found/features/auth/presentation/view_model/auth_view_model.dart';
-import 'package:lost_n_found/features/auth/presentation/state/auth_state.dart';
-import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/utils/snackbar_utils.dart';
-import '../../../dashboard/presentation/pages/dashboard_page.dart';
 
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
@@ -29,12 +26,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
   bool _agreedToTerms = false;
   String? _selectedBatch;
   String _selectedCountryCode = '+977'; // Default Nepal
 
-  // Country codes
   final List<Map<String, String>> _countryCodes = [
     {'code': '+977', 'name': 'Nepal', 'flag': '🇳🇵'},
     {'code': '+91', 'name': 'India', 'flag': '🇮🇳'},
@@ -43,9 +38,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     {'code': '+86', 'name': 'China', 'flag': '🇨🇳'},
   ];
 
-  // Mock batch data - will come from GET /api/v1/batches
-  //step 19 paxi esma auney
-   List<BatchEntity> _batches = [];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(batchViewModelProvider.notifier).getAllBatches();
+    });
+  }
 
   @override
   void dispose() {
@@ -59,23 +58,19 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   Future<void> _handleSignup() async {
     if (!_agreedToTerms) {
-      SnackbarUtils.showError(
-        context,
-        'Please agree to the Terms & Conditions',
-      );
+      SnackbarUtils.showError(context, 'Please agree to the Terms & Conditions');
       return;
     }
 
     if (_formKey.currentState!.validate()) {
-      // Call auth view model register method with all required fields
-      ref.read(authViewModelProvider.notifier).register(
-        fullName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        countryCode: _selectedCountryCode,
-        batchId: _selectedBatch ?? '',
-        password: _passwordController.text.trim(),
-      );
+      await ref.read(authViewModelProvider.notifier).register(
+            fullName: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            username: _emailController.text.trim().split('@').first,
+            password: _passwordController.text.trim(),
+            phoneNumber: '$_selectedCountryCode${_phoneController.text.trim()}',
+            batchId: _selectedBatch,
+          );
     }
   }
 
@@ -83,36 +78,19 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     Navigator.of(context).pop();
   }
 
-  //step 20 yo tala ko ni ho
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      ref.read(batchViewModelProvider.notifier).getAllBatches();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    // step 20 mai
     final batchState = ref.watch(batchViewModelProvider);
     final authState = ref.watch(authViewModelProvider);
 
-    if (batchState.status == BatchStatus.loaded) {
-      _batches = batchState.batches; 
-    }
-
-    // Listen to auth state changes
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.registered) {
-        SnackbarUtils.showSuccess(context, 'Registration successful! Please login to continue.');
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.of(context).pop(); // Go back to login page
-          }
+        SnackbarUtils.showSuccess(context, 'Registration successful! Please login.');
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.of(context).pop();
         });
-      } else if (next.status == AuthStatus.error) {
-        SnackbarUtils.showError(context, next.errorMessage ?? 'Registration failed');
+      } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+        SnackbarUtils.showError(context, next.errorMessage!);
       }
     });
 
@@ -141,7 +119,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo and Header
+                  // Header Section
                   Center(
                     child: Column(
                       children: [
@@ -159,28 +137,17 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                               ),
                             ],
                           ),
-                          child: Icon(
-                            Icons.person_add_rounded,
-                            size: 40,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.person_add_rounded, size: 40, color: Colors.white),
                         ),
                         const SizedBox(height: 20),
                         Text(
                           'Join Us Today',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: context.textPrimary,
-                          ),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.textPrimary),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Create your account to get started',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textSecondary.withAlpha(180),
-                          ),
+                          style: TextStyle(fontSize: 14, color: context.textSecondary.withAlpha(180)),
                         ),
                       ],
                     ),
@@ -197,15 +164,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       hintText: 'Enter your full name',
                       prefixIcon: Icon(Icons.person_outline_rounded),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
-                      }
-                      if (value.length < 3) {
-                        return 'Name must be at least 3 characters';
-                      }
-                      return null;
-                    },
+                    validator: (value) => (value == null || value.length < 3) ? 'Name must be at least 3 characters' : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -219,12 +178,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!RegExp(
-                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                      ).hasMatch(value)) {
+                      if (value == null || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                         return 'Please enter a valid email';
                       }
                       return null;
@@ -232,49 +186,33 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Phone Number with Country Code
+                  // Phone Number Row - FIX APPLIED HERE
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Country Code Dropdown
                       SizedBox(
-                        width: 120,
+                        width: 105, // Increased slightly to give more room
                         child: DropdownButtonFormField<String>(
-                          initialValue: _selectedCountryCode,
+                          value: _selectedCountryCode,
+                          isExpanded: true, // Prevents overflow inside the dropdown
                           decoration: const InputDecoration(
                             labelText: 'Code',
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 16,
-                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8), // Tighter padding
                           ),
                           items: _countryCodes.map((country) {
-                            return DropdownMenuItem<String>(
+                            return DropdownMenuItem(
                               value: country['code'],
-                              child: Row(
-                                children: [
-                                  Text(
-                                    country['flag']!,
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    country['code']!,
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ],
+                              child: Text(
+                                '${country['flag']} ${country['code']}',
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             );
                           }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedCountryCode = value!;
-                            });
-                          },
+                          onChanged: (val) => setState(() => _selectedCountryCode = val!),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Phone Number Field
                       Expanded(
                         child: TextFormField(
                           controller: _phoneController,
@@ -282,52 +220,33 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           maxLength: 10,
                           decoration: const InputDecoration(
                             labelText: 'Phone Number',
-                            hintText: '9800000000',
-                            prefixIcon: Icon(Icons.phone_outlined),
                             counterText: '',
+                            prefixIcon: Icon(Icons.phone_outlined),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter phone number';
-                            }
-                            if (value.length != 10) {
-                              return 'Phone must be 10 digits';
-                            }
-                            if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                              return 'Only numbers allowed';
-                            }
-                            return null;
-                          },
+                          validator: (value) => (value == null || value.length != 10) ? 'Enter 10 digit number' : null,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Batch Selection
+
+                  // Batch Dropdown
                   DropdownButtonFormField<String>(
-                    initialValue: _selectedBatch,
-                    decoration: const InputDecoration(
+                    value: _selectedBatch,
+                    isExpanded: true, // Also added here to prevent long batch name overflows
+                    decoration: InputDecoration(
                       labelText: 'Select Batch',
-                      hintText: 'Choose your batch',
-                      prefixIcon: Icon(Icons.school_rounded),
+                      hintText: batchState.status == BatchStatus.loading ? 'Loading...' : 'Choose your batch',
+                      prefixIcon: const Icon(Icons.school_rounded),
                     ),
-                    items: _batches.map((batch) {
+                    items: batchState.batches.map((batch) {
                       return DropdownMenuItem<String>(
                         value: batch.batchId,
                         child: Text(batch.batchName),
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedBatch = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select your batch';
-                      }
-                      return null;
-                    },
+                    onChanged: (value) => setState(() => _selectedBatch = value),
+                    validator: (value) => value == null ? 'Please select your batch' : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -337,30 +256,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      hintText: 'Create a strong password',
-                      prefixIcon: Icon(Icons.lock_outline_rounded),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
+                    validator: (value) => (value == null || value.length < 6) ? 'Min 6 characters required' : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -370,84 +272,33 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
-                      hintText: 'Re-enter your password',
-                      prefixIcon: Icon(Icons.lock_outline_rounded),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
+                        icon: Icon(_obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                        onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
+                    validator: (value) => (value != _passwordController.text) ? 'Passwords do not match' : null,
                   ),
                   const SizedBox(height: 20),
 
                   // Terms & Conditions
                   Row(
                     children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: _agreedToTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _agreedToTerms = value ?? false;
-                            });
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
+                      Checkbox(
+                        value: _agreedToTerms,
+                        onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
                       ),
-                      const SizedBox(width: 12),
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _agreedToTerms = !_agreedToTerms;
-                            });
-                          },
-                          child: Text.rich(
-                            TextSpan(
-                              text: 'I agree to the ',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: context.textSecondary,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: 'Terms & Conditions',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const TextSpan(text: ' and '),
-                                TextSpan(
-                                  text: 'Privacy Policy',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        child: Text.rich(
+                          TextSpan(
+                            text: 'I agree to the ',
+                            style: TextStyle(color: context.textSecondary, fontSize: 13),
+                            children: [
+                              TextSpan(text: 'Terms & Conditions', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                              const TextSpan(text: ' and '),
+                              TextSpan(text: 'Privacy Policy', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                            ],
                           ),
                         ),
                       ),
@@ -455,39 +306,23 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Sign Up Button
                   GradientButton(
-                    text: authState.status == AuthStatus.loading ? 'Creating Account...' : 'Create Account',
-                    onPressed: authState.status == AuthStatus.loading ? () {} : _handleSignup,
+                    text: 'Create Account',
+                    onPressed: _handleSignup,
                     isLoading: authState.status == AuthStatus.loading,
                   ),
                   const SizedBox(height: 32),
 
-                  // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Already have an account? ',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 15,
-                        ),
-                      ),
+                      Text('Already have an account? ', style: TextStyle(color: context.textSecondary)),
                       GestureDetector(
                         onTap: _navigateToLogin,
-                        child: Text(
-                          'Login',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
+                        child: Text('Login', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),

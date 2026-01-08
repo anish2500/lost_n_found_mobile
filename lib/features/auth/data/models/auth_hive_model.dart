@@ -17,13 +17,13 @@ class AuthHiveModel extends HiveObject {
   final String email;
 
   @HiveField(3)
-  final String phone;
+  final String? phoneNumber;
 
   @HiveField(4)
-  final String countryCode;
+  final String username;
 
   @HiveField(5)
-  final String batchId;
+  final String? batchId;
 
   @HiveField(6)
   final String? password;
@@ -35,12 +35,12 @@ class AuthHiveModel extends HiveObject {
     String? authId,
     required this.fullName,
     required this.email,
-    required this.phone,
-    required this.countryCode,
-    required this.batchId,
+    this.phoneNumber,
+    required this.username,
+    this.batchId,
     this.password,
     this.profilePicture,
-  }) : authId = authId ?? Uuid().v4();
+  }) : authId = authId ?? const Uuid().v4();
 
   // From Entity
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
@@ -48,8 +48,8 @@ class AuthHiveModel extends HiveObject {
       authId: entity.authId,
       fullName: entity.fullName,
       email: entity.email,
-      phone: entity.phone,
-      countryCode: entity.countryCode,
+      phoneNumber: entity.phoneNumber,
+      username: entity.username,
       batchId: entity.batchId,
       password: entity.password,
       profilePicture: entity.profilePicture,
@@ -62,8 +62,8 @@ class AuthHiveModel extends HiveObject {
       authId: authId,
       fullName: fullName,
       email: email,
-      phone: phone,
-      countryCode: countryCode,
+      phoneNumber: phoneNumber,
+      username: username,
       batchId: batchId,
       password: password,
       profilePicture: profilePicture,

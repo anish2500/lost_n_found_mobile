@@ -62,24 +62,24 @@ class BatchRepository implements IBatchRepository {
 
   @override
   Future<Either<Failure, List<BatchEntity>>> getAllBatches() async {
-    //internet xa ki xaina
-    if (await _networkInfo.isConnected) {
-      try {
-        //api model capture
-        final apiModels = await _batchRemoteDataSource.getAllBatches();
-        //convert to entity
-        final result = BatchApiModel.toEntityList(apiModels);
+    // Skip backend for now - use only local data
+    // if (await _networkInfo.isConnected) {
+    //   try {
+    //     //api model capture
+    //     final apiModels = await _batchRemoteDataSource.getAllBatches();
+    //     //convert to entity
+    //     final result = BatchApiModel.toEntityList(apiModels);
 
-        return Right(result);
-      } on DioException catch (e) {
-        return Left(
-          ApiFailure(
-            statusCode: e.response?.statusCode,
-            message: e.response?.data['message'] ?? 'Failed to create batches',
-          ),
-        );
-      }
-    } else {
+    //     return Right(result);
+    //   } on DioException catch (e) {
+    //     return Left(
+    //       ApiFailure(
+    //         statusCode: e.response?.statusCode,
+    //         message: e.response?.data['message'] ?? 'Failed to create batches',
+    //       ),
+    //     );
+    //   }
+    // } else {
       try {
         final models = await _batchLocalDataSource.getAllBatches();
         final entities = BatchHiveModel.toEntityList(models); //conversion
@@ -87,7 +87,7 @@ class BatchRepository implements IBatchRepository {
       } catch (e) {
         return Left(LocalDatabaseFailure(message: e.toString()));
       }
-    }
+    // }
   }
 
   @override

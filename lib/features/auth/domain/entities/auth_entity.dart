@@ -1,23 +1,26 @@
 import 'package:equatable/equatable.dart';
+import 'package:lost_n_found/features/batch/domain/entities/batch_entity.dart';
 
 class AuthEntity extends Equatable {
   final String? authId;
   final String fullName;
   final String email;
-  final String phone;
-  final String countryCode;
-  final String batchId;
+  final String ?phoneNumber;
+  final String username; 
+  final String ?batchId;
   final String? password;
+  final BatchEntity ? batch; 
   final String? profilePicture;
 
   const AuthEntity({
     this.authId,
     required this.fullName,
     required this.email,
-    required this.phone,
-    required this.countryCode,
-    required this.batchId,
+    this.phoneNumber,
+    required this.username,
+    this.batchId,
     this.password,
+    this.batch,
     this.profilePicture,
   });
 
@@ -26,10 +29,12 @@ class AuthEntity extends Equatable {
     authId,
     fullName,
     email,
-    phone,
-    countryCode,
+    phoneNumber,
     batchId,
+    username, 
     password,
+    batchId,
+    batch,
     profilePicture,
   ];
 
