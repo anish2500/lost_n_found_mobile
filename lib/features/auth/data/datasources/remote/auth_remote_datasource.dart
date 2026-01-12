@@ -33,24 +33,47 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
   }
 
   @override
-  Future<AuthApiModel?> login(String email, String password) {
-    // TODO: implement login
-    throw UnimplementedError();
+  Future<AuthApiModel?> login(String email, String password) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.studentLogin,
+      data: {'email': email, 'password': password},
+    );
+    if (response.data['success'] == true) {
+      final data = response.data['data'] as Map<String, dynamic>;
+      final user = AuthApiModel.fromJson(data);
+      await _userSessionService.saveUserSession(
+        userId: user.id!,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber,
+        batchId: user.batchId,
+      );
+      return user;
+    }
+    return null;
   }
 
   @override
   Future<AuthApiModel> register(AuthApiModel user) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.students,
-      data: user.toJson(),
-    );
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.students,
+        data: user.toJson(),
+      );
 
-    if (response.data['success'] == true) {
-      final data = response.data['data'] as Map<String, dynamic>;
-      final registeredUser = AuthApiModel.fromJson(data);
-      return registeredUser;
+      if (response.data['success'] == true) {
+        final data = response.data['data'] as Map<String, dynamic>;
+        try {
+          final registeredUser = AuthApiModel.fromJson(data);
+          return registeredUser;
+        } catch (e) {
+          return user;
+        }
+      }
+      return user;
+    } catch (e) {
+      rethrow;
     }
-
-    return user; 
   }
 }

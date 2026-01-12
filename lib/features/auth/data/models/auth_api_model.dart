@@ -27,7 +27,7 @@ class AuthApiModel {
   // toJson: Matches your database/API keys
   Map<String, dynamic> toJson() {
     return {
-      "fullName": fullName,
+      "name": fullName,
       "email": email,
       "phoneNumber": phoneNumber,
       "username": username,
@@ -40,11 +40,11 @@ class AuthApiModel {
   // fromJson: Maps API response to the Model
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {
     return AuthApiModel(
-      id: json['_id'] as String?,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
+      id: json['_id'] as String? ?? json['id'] as String?,
+      fullName: (json['fullName'] ?? json['name'] ?? '') as String,
+      email: (json['email'] ?? '') as String,
       phoneNumber: json['phoneNumber'] as String?,
-      username: json['username'] as String,
+      username: (json['username'] ?? '') as String,
       password: json['password'] as String?,
       batchId: json['batchId'] as String?,
       profilePicture: json['profilePicture'] as String?,
