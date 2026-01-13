@@ -1,11 +1,12 @@
-import 'package:lost_n_found/core/config/environment_config.dart';
-
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Base URL - Platform-aware configuration
-  // Uses EnvironmentConfig to get the appropriate URL based on platform
-  static String baseUrl = EnvironmentConfig.getBaseUrl();
+  // Base URL - change this for production
+  static const String baseUrl = 'http://10.15.50.75:3000/api/v1';
+  //static const String baseUrl = 'http://localhost:3000/api/v1';
+  // For Android Emulator use: 'http://10.0.2.2:3000/api/v1'
+  // For iOS Simulator use: 'http://localhost:5000/api/v1'
+  // For Physical Device use your computer's IP: 'http://192.168.x.x:5000/api/v1'
 
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
@@ -21,7 +22,6 @@ class ApiEndpoints {
   // ============ Student Endpoints ============
   static const String students = '/students';
   static const String studentLogin = '/students/login';
-  // static const String studentRegister = '/students/register';
   static String studentById(String id) => '/students/$id';
   static String studentPhoto(String id) => '/students/$id/photo';
 
