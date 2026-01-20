@@ -99,12 +99,10 @@ class _ReportItemPageState extends State<ReportItemPage> {
 
     if (photo != null) {
       //photo ayesi ui ma dekhauna milyo
-      setState() {
+      setState(() {
         _selectedMedia.clear(); //to clear out the overlapping of previous photo
-        _selectedMedia.add(
-          photo,
-        ); //created list of selected media ma photo add hunxa
-      }
+        _selectedMedia.add(photo);
+      });
     }
   }
 
