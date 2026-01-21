@@ -19,14 +19,15 @@ class NetworkInfo implements INetworkInfo {
   NetworkInfo(this._connectivity);
   @override
   Future<bool> get isConnected async {
+    final hasInternet = await _isInternetReallyAvailable();
+    if (hasInternet) {
+      return true;
+    }
+
     //check wifi or mobile data is on
     final result = await _connectivity
         .checkConnectivity(); //check garney kaam esle garxa wifi ki mobile data bhanera
-    if (result.contains(ConnectivityResult.none)) {
-      return false;
-    }
-    // return await _isInternetReallyAvailable();//decides to return true or false 
-    return true;
+    return !result.contains(ConnectivityResult.none);
   }
 
   //internet xa ki nai check garney

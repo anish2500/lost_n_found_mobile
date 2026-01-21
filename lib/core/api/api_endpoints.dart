@@ -13,7 +13,7 @@ class ApiEndpoints {
   // // For Physical Device use your computer's IP: 'http://192.168.x.x:5000/api/v1'
 
   static const bool isPhsicalDevice = true;//physical device ho bhaney device wifi anusar ip change garera yo line ma true garney 
-  static const String compIpAddress = '10.1.11.207';
+  static const String compIpAddress = '10.12.28.203';
   static String get baseUrl {
     if (isPhsicalDevice) {
       return 'http://$compIpAddress:3000/api/v1';
@@ -50,6 +50,8 @@ class ApiEndpoints {
   static const String items = '/items';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
+  static String itemUploadPhoto = '/items/upload-photo';
+  static String itemUploadVideo = '/items/upload-video';
 
   // ============ Comment Endpoints ============
   static const String comments = '/comments';
